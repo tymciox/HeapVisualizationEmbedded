@@ -1,7 +1,8 @@
 import tkinter as tk
 from tkinter import filedialog
-import matplotlib.pyplot as plt
-import numpy as np
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import pandas as pd
 
 def select_file():
     file_path = filedialog.askopenfilename(title="Select a .txt file", filetypes=[("Text files", "*.txt")])
@@ -12,10 +13,8 @@ def select_file():
 
 def show_heap(file_path):
     if file_path:
-        # Assuming the .txt file contains lines with "size=10, y=10, comment=file,line, thread=Thread1"
-        x_values = {}
-        y_values = {}
-        comments = {}
+        # Assuming the .txt file contains lines with "size=10, y=10, comment=file/line, thread=Thread1"
+        data = {'x': [], 'y': [], 'comment': [], 'thread': []}
 
         with open(file_path, 'r') as file:
             for line in file:
@@ -28,32 +27,41 @@ def show_heap(file_path):
                     comment = parts[2].split('=')[1]
                     thread = parts[3].split('=')[1]
 
-                    if thread not in x_values:
-                        x_values[thread] = []
-                        y_values[thread] = []
-                        comments[thread] = []
-
-                    x_values[thread].append(x)
-                    if y_values[thread]:  # If y_values is not empty
-                        y_values[thread].append(y + y_values[thread][-1])  # Add to the cumulative sum
-                    else:
-                        y_values[thread].append(y)  # Initial value
-                    comments[thread].append(comment)
+                    data['x'].append(x)
+                    data['y'].append(y)
+                    data['comment'].append(comment)
+                    data['thread'].append(thread)
                 else:
                     print(f"Ignored line: {line.strip()} - Not enough components")
 
-        # Plotting the data with annotations for each thread
-        for thread in x_values:
-            plt.figure()  # Create a new figure for each thread
-            plt.scatter(x_values[thread], y_values[thread], label=f'{thread}')
-            for i, comment in enumerate(comments[thread]):
-                plt.annotate(comment, (x_values[thread][i], y_values[thread][i]), textcoords="offset points", xytext=(5, 5), ha='center')
+        df = pd.DataFrame(data)
 
-            plt.title(f'Unreleased Memory Over Time - {thread}')
-            plt.xlabel('Time')
-            plt.ylabel('Unreleased Memory Usage')
-            plt.legend()
-            plt.show(block=False)
+        # Create subplots with shared x-axis
+        fig = make_subplots(rows=len(df['thread'].unique()), cols=1, shared_xaxes=True, subplot_titles=list(df['thread'].unique()))
+
+        for i, thread in enumerate(df['thread'].unique()):
+            thread_data = df[df['thread'] == thread]
+            fig.add_trace(
+                go.Scatter(
+                    x=thread_data['x'],
+                    y=thread_data['y'].cumsum(),
+                    mode='markers+lines',
+                    name=thread,
+                    hovertext=thread_data['comment'],  # Include comments as hover text
+                    hoverinfo='text'  # Show hover text
+                ),
+                row=i+1, col=1
+            )
+
+        # Update layout
+        fig.update_layout(
+            title_text="Unreleased Memory Over Time",
+            xaxis_title="Time",
+            yaxis_title="Cumulative Unreleased Memory Usage"
+        )
+
+        # Show the plot
+        fig.show()
 
 # Create the main window
 app = tk.Tk()
