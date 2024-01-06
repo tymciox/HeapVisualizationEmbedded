@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog
 import matplotlib.pyplot as plt
+import numpy as np
 
 def select_file():
     file_path = filedialog.askopenfilename(title="Select a .txt file", filetypes=[("Text files", "*.txt")])
@@ -11,7 +12,7 @@ def select_file():
 
 def show_heap(file_path):
     if file_path:
-        # Assuming the .txt file contains lines with "time=10, size=10, comment=file/line, thread=Thread1"
+        # Assuming the .txt file contains lines with "size=10, y=10, comment=file,line, thread=Thread1"
         x_values = {}
         y_values = {}
         comments = {}
@@ -33,7 +34,10 @@ def show_heap(file_path):
                         comments[thread] = []
 
                     x_values[thread].append(x)
-                    y_values[thread].append(y)
+                    if y_values[thread]:  # If y_values is not empty
+                        y_values[thread].append(y + y_values[thread][-1])  # Add to the cumulative sum
+                    else:
+                        y_values[thread].append(y)  # Initial value
                     comments[thread].append(comment)
                 else:
                     print(f"Ignored line: {line.strip()} - Not enough components")
