@@ -11,7 +11,7 @@ def select_file():
 
 def show_heap(file_path):
     if file_path:
-        # Assuming the .txt file contains lines with "size=10, y=10, comment=file,line, thread=Thread1"
+        # Assuming the .txt file contains lines with "time=10, size=10, comment=file/line, thread=Thread1"
         x_values = {}
         y_values = {}
         comments = {}
@@ -41,13 +41,13 @@ def show_heap(file_path):
         # Plotting the data with annotations for each thread
         for thread in x_values:
             plt.figure()  # Create a new figure for each thread
-            plt.scatter(x_values[thread], y_values[thread], label=f'Thread {thread}')
+            plt.scatter(x_values[thread], y_values[thread], label=f'{thread}')
             for i, comment in enumerate(comments[thread]):
                 plt.annotate(comment, (x_values[thread][i], y_values[thread][i]), textcoords="offset points", xytext=(5, 5), ha='center')
 
-            plt.title(f'Memory Usage Over Time - {thread}')
+            plt.title(f'Unreleased Memory Over Time - {thread}')
             plt.xlabel('Time')
-            plt.ylabel('Memory')
+            plt.ylabel('Unreleased Memory Usage')
             plt.legend()
             plt.show(block=False)
 
