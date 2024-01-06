@@ -11,32 +11,44 @@ def select_file():
 
 def show_heap(file_path):
     if file_path:
-        # Assuming the .txt file contains lines with "x=10, y=10, comment=lodz"
-        x_values = []
-        y_values = []
-        comments = []
+        # Assuming the .txt file contains lines with "size=10, y=10, comment=file,line, thread=Thread1"
+        x_values = {}
+        y_values = {}
+        comments = {}
 
         with open(file_path, 'r') as file:
             for line in file:
-                # Extracting 'x', 'y', and 'comment' values from each line
                 parts = line.strip().split(',')
-                x = int(parts[0].split('=')[1])
-                y = int(parts[1].split('=')[1])
-                comment = parts[2].split('=')[1]
-                x_values.append(x)
-                y_values.append(y)
-                comments.append(comment)
+                
+                # Check if there are enough parts in the line
+                if len(parts) >= 4:
+                    x = int(parts[0].split('=')[1])
+                    y = int(parts[1].split('=')[1])
+                    comment = parts[2].split('=')[1]
+                    thread = parts[3].split('=')[1]
 
-        # Plotting the data with annotations
-        plt.scatter(x_values, y_values, label='Points')
-        for i, comment in enumerate(comments):
-            plt.annotate(comment, (x_values[i], y_values[i]), textcoords="offset points", xytext=(5,5), ha='center')
+                    if thread not in x_values:
+                        x_values[thread] = []
+                        y_values[thread] = []
+                        comments[thread] = []
 
-        plt.title('Scatter Plot with Comments')
-        plt.xlabel('X')
-        plt.ylabel('Y')
-        plt.legend()
-        plt.show()
+                    x_values[thread].append(x)
+                    y_values[thread].append(y)
+                    comments[thread].append(comment)
+                else:
+                    print(f"Ignored line: {line.strip()} - Not enough components")
+
+        # Plotting the data with annotations for each thread
+        for thread in x_values:
+            plt.scatter(x_values[thread], y_values[thread], label=f'Thread {thread}')
+            for i, comment in enumerate(comments[thread]):
+                plt.annotate(comment, (x_values[thread][i], y_values[thread][i]), textcoords="offset points", xytext=(5, 5), ha='center')
+
+            plt.title(f'Memory Usage Over Time - Thread {thread}')
+            plt.xlabel('Time')
+            plt.ylabel('Memory')
+            plt.legend()
+            plt.show()
 
 # Create the main window
 app = tk.Tk()
