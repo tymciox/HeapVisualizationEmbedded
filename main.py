@@ -40,15 +40,16 @@ def show_heap(file_path):
 
         # Plotting the data with annotations for each thread
         for thread in x_values:
+            plt.figure()  # Create a new figure for each thread
             plt.scatter(x_values[thread], y_values[thread], label=f'Thread {thread}')
             for i, comment in enumerate(comments[thread]):
                 plt.annotate(comment, (x_values[thread][i], y_values[thread][i]), textcoords="offset points", xytext=(5, 5), ha='center')
 
-            plt.title(f'Memory Usage Over Time - Thread {thread}')
+            plt.title(f'Memory Usage Over Time - {thread}')
             plt.xlabel('Time')
             plt.ylabel('Memory')
             plt.legend()
-            plt.show()
+            plt.show(block=False)
 
 # Create the main window
 app = tk.Tk()
