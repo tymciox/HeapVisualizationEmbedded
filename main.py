@@ -1,38 +1,66 @@
-import tkinter as tk
-from tkinter import filedialog
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+import dash
+from dash import dcc, html
+import dash_table
+from dash.dependencies import Input, Output
 import pandas as pd
+import base64
+from plotly import graph_objects as go
+import io
+from plotly.subplots import make_subplots
 
-def select_file():
-    file_path = filedialog.askopenfilename(title="Select a .txt file", filetypes=[("Text files", "*.txt")])
-    if file_path:
-        print(f"Selected file: {file_path}")
-        return file_path
-    return None
+# ... (your existing imports)
 
-def show_heap(file_path):
-    if file_path:
-        # Assuming the .txt file contains lines with "size=10, y=10, comment=name/line, thread=Thread1"
+# Create the main app
+app = dash.Dash(__name__)
+
+# Define the app layout
+app.layout = html.Div([
+    html.H1("Unreleased Memory Over Time"),
+    dcc.Upload(
+        id='upload-data',
+        children=html.Button('Select File'),
+        multiple=False
+    ),
+    html.Div([
+        dcc.Graph(id='heap-graph'),
+    ], style={'width': '70%', 'display': 'inline-block', 'vertical-align': 'top'}),
+    
+    html.Div([
+        dash_table.DataTable(id='heap-table'),
+    ], style={'width': '30%', 'display': 'inline-block', 'vertical-align': 'top'}),
+])
+
+# Callback to update the graph and table based on the uploaded file
+@app.callback(
+    [Output('heap-graph', 'figure'),
+     Output('heap-table', 'data')],
+    [Input('upload-data', 'contents')]
+)
+def update_graph_and_table(contents):
+    if contents:
+        # Extracting the data from the uploaded file
+        content_type, content_string = contents.split(',')
+        decoded = base64.b64decode(content_string)
+        file_path = io.StringIO(decoded.decode('utf-8'))
+
         data = {'x': [], 'y': [], 'comment': [], 'thread': []}
 
-        with open(file_path, 'r') as file:
-            for line in file:
-                parts = line.strip().split(',')
-                
-                # Check if there are enough parts in the line
-                if len(parts) >= 4:
-                    x = int(parts[0].split('=')[1])
-                    y = int(parts[1].split('=')[1])
-                    comment = f"src:{parts[2].split('=')[1].split('/')[0]}<br>line:{parts[2].split('/')[1]}"  # Add "src:" and "line" to comments
-                    thread = parts[3].split('=')[1]
+        for line in file_path:
+            parts = line.strip().split(',')
 
-                    data['x'].append(x)
-                    data['y'].append(y)
-                    data['comment'].append(comment)
-                    data['thread'].append(thread)
-                else:
-                    print(f"Ignored line: {line.strip()} - Not enough components")
+            # Check if there are enough parts in the line
+            if len(parts) >= 4:
+                x = int(parts[0].split('=')[1])
+                y = int(parts[1].split('=')[1])
+                comment = f"src:{parts[2].split('=')[1].split('/')[0]}<br>line:{parts[2].split('/')[1]}"  # Add "src:" and "line" to comments
+                thread = parts[3].split('=')[1]
+
+                data['x'].append(x)
+                data['y'].append(y)
+                data['comment'].append(comment)
+                data['thread'].append(thread)
+            else:
+                print(f"Ignored line: {line.strip()} - Not enough components")
 
         df = pd.DataFrame(data)
 
@@ -60,16 +88,14 @@ def show_heap(file_path):
             yaxis_title="Cumulative Unreleased Memory Usage"
         )
 
-        # Show the plot
-        fig.show()
+        # Create data for the table
+        table_data = df.to_dict('records')
 
-# Create the main window
-app = tk.Tk()
-app.title("Select heap log")
+        return fig, table_data
 
-# Create the "Select File" button
-select_button = tk.Button(app, text="Select File", command=lambda: show_heap(select_file()))
-select_button.pack(pady=10)
+    # If no contents, return default values
+    return go.Figure(), []
 
 # Run the application
-app.mainloop()
+if __name__ == '__main__':
+    app.run_server(debug=True)
