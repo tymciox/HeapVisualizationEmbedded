@@ -21,29 +21,22 @@ app.layout = html.Div([
         children=html.Button('Select File'),
         multiple=False
     ),
-    html.Div([
-        dcc.Graph(id='heap-graph'),
-    ], style={'width': '70%', 'display': 'inline-block', 'vertical-align': 'top'}),
-    
-    html.Div([
-        dash_table.DataTable(id='heap-table'),
-    ], style={'width': '30%', 'display': 'inline-block', 'vertical-align': 'top'}),
+    html.Div(id='graph-table-container', children=[]),
 ])
 
-# Callback to update the graph and table based on the uploaded file
+# Callback to update the layout with graphs and tables
 @app.callback(
-    [Output('heap-graph', 'figure'),
-     Output('heap-table', 'data')],
+    Output('graph-table-container', 'children'),
     [Input('upload-data', 'contents')]
 )
-def update_graph_and_table(contents):
+def update_layout(contents):
     if contents:
         # Extracting the data from the uploaded file
         content_type, content_string = contents.split(',')
         decoded = base64.b64decode(content_string)
         file_path = io.StringIO(decoded.decode('utf-8'))
 
-        data = {'x': [], 'y': [], 'comment': [], 'thread': []}
+        data = {'time': [], 'memory_size': [], 'comment': [], 'thread': []}
 
         for line in file_path:
             parts = line.strip().split(',')
@@ -55,8 +48,8 @@ def update_graph_and_table(contents):
                 comment = f"src:{parts[2].split('=')[1].split('/')[0]}<br>line:{parts[2].split('/')[1]}"  # Add "src:" and "line" to comments
                 thread = parts[3].split('=')[1]
 
-                data['x'].append(x)
-                data['y'].append(y)
+                data['time'].append(x)
+                data['memory_size'].append(y)
                 data['comment'].append(comment)
                 data['thread'].append(thread)
             else:
@@ -65,36 +58,52 @@ def update_graph_and_table(contents):
         df = pd.DataFrame(data)
 
         # Create subplots with shared x-axis
-        fig = make_subplots(rows=len(df['thread'].unique()), cols=1, shared_xaxes=True, subplot_titles=list(df['thread'].unique()))
-
-        for i, thread in enumerate(df['thread'].unique()):
+        graphs_and_tables = []
+        for thread in df['thread'].unique():
             thread_data = df[df['thread'] == thread]
+
+            # Create a graph for each thread
+            fig = make_subplots(rows=1, cols=1)
             fig.add_trace(
                 go.Scatter(
-                    x=thread_data['x'],
-                    y=thread_data['y'].cumsum(),
+                    x=thread_data['time'],
+                    y=thread_data['memory_size'].cumsum(),
                     mode='markers+lines',
                     name=thread,
                     hovertext=thread_data['comment'],  # Include comments as hover text
                     hoverinfo='text'  # Show hover text
-                ),
-                row=i+1, col=1
+                )
+            )
+            fig.update_layout(
+                title_text=f"Unreleased Memory Over Time ({thread})",
+                xaxis_title="Time",
+                yaxis_title="Cumulative Unreleased Memory Usage"
             )
 
-        # Update layout
-        fig.update_layout(
-            title_text="Unreleased Memory Over Time",
-            xaxis_title="Time",
-            yaxis_title="Cumulative Unreleased Memory Usage"
-        )
+            # Create data for the table
+            table_data = thread_data.to_dict('records')
 
-        # Create data for the table
-        table_data = df.to_dict('records')
+            # Create a table for each graph
+            table = dash_table.DataTable(
+                id={'type': 'table', 'index': thread},
+                data=table_data,
+                style_table={'maxHeight': '300px', 'overflowY': 'auto'},
+                fixed_rows={'headers': True, 'data': 0},
+                selected_rows=[],
+            )
 
-        return fig, table_data
+            graphs_and_tables.append(
+                html.Div([
+                    dcc.Graph(figure=fig),
+                    table
+                ])
+            )
 
-    # If no contents, return default values
-    return go.Figure(), []
+        return graphs_and_tables
+
+    # If no contents, return an empty list
+    return []
+
 
 # Run the application
 if __name__ == '__main__':
