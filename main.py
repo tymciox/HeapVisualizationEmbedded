@@ -36,7 +36,7 @@ def update_layout(contents):
         decoded = base64.b64decode(content_string)
         file_path = io.StringIO(decoded.decode('utf-8'))
 
-        data = {'time': [], 'size': [], 'address': [], 'source_file': [], 'line_number': [], 'thread_name': []}
+        data = {'time': [], 'size': [], 'address': [], 'source': [], 'line': [], 'thread_name': []}
 
         for line in file_path:
             parts = line.strip().split(',')
@@ -46,15 +46,15 @@ def update_layout(contents):
                 time = int(parts[0])
                 size = int(parts[1])
                 address = parts[2]
-                source_file = parts[3]
-                line_number = int(parts[4])
+                source = parts[3]
+                line = int(parts[4])
                 thread_name = parts[5]
 
                 data['time'].append(time)
                 data['size'].append(size)
                 data['address'].append(address)
-                data['source_file'].append(source_file)
-                data['line_number'].append(line_number)
+                data['source'].append(source)
+                data['line'].append(line)
                 data['thread_name'].append(thread_name)
             else:
                 print(f"Ignored line: {line.strip()} - Wrong format")
@@ -74,7 +74,7 @@ def update_layout(contents):
                     y=thread_data['size'].cumsum(),
                     mode='markers+lines',
                     name=thread,
-                    hovertext=f"src:{thread_data['source_file']}<br>line:{thread_data['line_number']}",  # Include comments as hover text
+                    hovertext=f"src:{thread_data['source'].iloc[0]}<br>line:{thread_data['line'].iloc[0]}",
                     hoverinfo='text'  # Show hover text
                 )
             )
@@ -82,8 +82,6 @@ def update_layout(contents):
                 title_text=f"Thread: {thread}",
                 xaxis_title="Time",
                 yaxis_title="Cumulative Unreleased Memory Usage",
-                height=500,  # Set the height of the graph
-                width=800,  # Set the width of the graph
                 margin=dict(l=50, r=50, b=50, t=50),  # Adjust margin for better layout
                 title_x=0.5,  # Center the title horizontally
                 title_y=0.9,  # Adjust the vertical position of the title
@@ -96,20 +94,20 @@ def update_layout(contents):
             table = dash_table.DataTable(
                 id={'type': 'table', 'index': thread},
                 data=table_data,
-                style_table={'height': '500px', 'maxHeight': '500px', 'overflowY': 'auto', 'marginBottom': 100},
+                style_table={'minHeight': '100px', 'maxHeight': '500px', 'overflowY': 'auto', 'marginBottom': 100},
                 fixed_rows={'headers': True, 'data': 0},
                 selected_rows=[],
+                style_cell={'textAlign': 'left', 'minWidth': '50px', 'maxWidth': '300px', 'whiteSpace': 'normal'},
+                style_header={'backgroundColor': 'rgb(230, 230, 230)', 'fontWeight': 'bold'},
             )
 
             # Create a single div for each thread containing both the graph and table
             thread_div = html.Div([
-                dcc.Graph(figure=fig),
-                table
+                html.Div(dcc.Graph(figure=fig), style={'width': '70%'}),
+                html.Div(table, style={'width': '30%'})
             ], style={'display': 'flex', 'flexDirection': 'row'})
 
             graphs_and_tables.append(thread_div)
-
-        return graphs_and_tables
 
         return graphs_and_tables
 
