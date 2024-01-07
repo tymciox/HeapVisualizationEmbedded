@@ -36,24 +36,26 @@ def update_layout(contents):
         decoded = base64.b64decode(content_string)
         file_path = io.StringIO(decoded.decode('utf-8'))
 
-        data = {'time': [], 'memory_size': [], 'comment': [], 'thread': []}
+        data = {'time': [], 'size': [], 'source_file': [], 'line': [], 'thread': []}
 
         for line in file_path:
             parts = line.strip().split(',')
 
             # Check if there are enough parts in the line
-            if len(parts) >= 4:
-                x = int(parts[0].split('=')[1])
-                y = int(parts[1].split('=')[1])
-                comment = f"src:{parts[2].split('=')[1].split('/')[0]}<br>line:{parts[2].split('/')[1]}"  # Add "src:" and "line" to comments
-                thread = parts[3].split('=')[1]
+            if len(parts) == 5:
+                time = int(parts[0])
+                size = int(parts[1])
+                src = parts[2]
+                line_number = int(parts[3])
+                thread = parts[4]
 
-                data['time'].append(x)
-                data['memory_size'].append(y)
-                data['comment'].append(comment)
+                data['time'].append(time)
+                data['size'].append(size)
+                data['source_file'].append(src)
+                data['line'].append(line_number)
                 data['thread'].append(thread)
             else:
-                print(f"Ignored line: {line.strip()} - Not enough components")
+                print(f"Ignored line: {line.strip()} - Wrong format")
 
         df = pd.DataFrame(data)
 
@@ -67,10 +69,10 @@ def update_layout(contents):
             fig.add_trace(
                 go.Scatter(
                     x=thread_data['time'],
-                    y=thread_data['memory_size'].cumsum(),
+                    y=thread_data['size'].cumsum(),
                     mode='markers+lines',
                     name=thread,
-                    hovertext=thread_data['comment'],  # Include comments as hover text
+                    hovertext=f"src:{thread_data['source_file']}<br>line:{thread_data['line']}",  # Include comments as hover text
                     hoverinfo='text'  # Show hover text
                 )
             )
