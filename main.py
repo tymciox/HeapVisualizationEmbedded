@@ -66,7 +66,7 @@ def update_layout(contents):
 
             # Create a graph for each thread
             fig = make_subplots(rows=1, cols=1)
-            hovertext = [f"src:{source}<br>line:{line}" for source, line in zip(thread_data['source'], thread_data['line'])]
+            hovertext = [f"time:{time}<br>src:{source}<br>line:{line}<br>size:{size}" for time, source, line, size in zip(thread_data['time'], thread_data['source'], thread_data['line'], thread_data['size'])]
             fig.add_trace(
                 go.Scatter(
                     x=thread_data['time'],
