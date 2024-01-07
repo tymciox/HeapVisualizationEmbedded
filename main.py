@@ -79,29 +79,37 @@ def update_layout(contents):
                 )
             )
             fig.update_layout(
-                title_text=f"Unreleased Memory Over Time ({thread})",
+                title_text=f"Thread: {thread}",
                 xaxis_title="Time",
-                yaxis_title="Cumulative Unreleased Memory Usage"
+                yaxis_title="Cumulative Unreleased Memory Usage",
+                height=500,  # Set the height of the graph
+                width=800,  # Set the width of the graph
+                margin=dict(l=50, r=50, b=50, t=50),  # Adjust margin for better layout
+                title_x=0.5,  # Center the title horizontally
+                title_y=0.9,  # Adjust the vertical position of the title
             )
 
             # Create data for the table
             table_data = thread_data.to_dict('records')
 
-            # Create a table for each graph
+            # Create a table for each thread
             table = dash_table.DataTable(
                 id={'type': 'table', 'index': thread},
                 data=table_data,
-                style_table={'maxHeight': '300px', 'overflowY': 'auto'},
+                style_table={'height': '500px', 'maxHeight': '500px', 'overflowY': 'auto', 'marginBottom': 100},
                 fixed_rows={'headers': True, 'data': 0},
                 selected_rows=[],
             )
 
-            graphs_and_tables.append(
-                html.Div([
-                    dcc.Graph(figure=fig),
-                    table
-                ])
-            )
+            # Create a single div for each thread containing both the graph and table
+            thread_div = html.Div([
+                dcc.Graph(figure=fig),
+                table
+            ], style={'display': 'flex', 'flexDirection': 'row'})
+
+            graphs_and_tables.append(thread_div)
+
+        return graphs_and_tables
 
         return graphs_and_tables
 
