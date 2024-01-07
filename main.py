@@ -8,8 +8,6 @@ from plotly import graph_objects as go
 import io
 from plotly.subplots import make_subplots
 
-# ... (your existing imports)
-
 # Create the main app
 app = dash.Dash(__name__)
 
