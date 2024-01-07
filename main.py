@@ -13,7 +13,7 @@ def select_file():
 
 def show_heap(file_path):
     if file_path:
-        # Assuming the .txt file contains lines with "size=10, y=10, comment=file/line, thread=Thread1"
+        # Assuming the .txt file contains lines with "size=10, y=10, comment=name/line, thread=Thread1"
         data = {'x': [], 'y': [], 'comment': [], 'thread': []}
 
         with open(file_path, 'r') as file:
@@ -24,7 +24,7 @@ def show_heap(file_path):
                 if len(parts) >= 4:
                     x = int(parts[0].split('=')[1])
                     y = int(parts[1].split('=')[1])
-                    comment = parts[2].split('=')[1]
+                    comment = f"src:{parts[2].split('=')[1].split('/')[0]}<br>line:{parts[2].split('/')[1]}"  # Add "src:" and "line" to comments
                     thread = parts[3].split('=')[1]
 
                     data['x'].append(x)
