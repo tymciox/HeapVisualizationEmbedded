@@ -36,24 +36,26 @@ def update_layout(contents):
         decoded = base64.b64decode(content_string)
         file_path = io.StringIO(decoded.decode('utf-8'))
 
-        data = {'time': [], 'size': [], 'source_file': [], 'line': [], 'thread': []}
+        data = {'time': [], 'size': [], 'address': [], 'source_file': [], 'line_number': [], 'thread_name': []}
 
         for line in file_path:
             parts = line.strip().split(',')
 
             # Check if there are enough parts in the line
-            if len(parts) == 5:
+            if len(parts) == 6:
                 time = int(parts[0])
                 size = int(parts[1])
-                src = parts[2]
-                line_number = int(parts[3])
-                thread = parts[4]
+                address = parts[2]
+                source_file = parts[3]
+                line_number = int(parts[4])
+                thread_name = parts[5]
 
                 data['time'].append(time)
                 data['size'].append(size)
-                data['source_file'].append(src)
-                data['line'].append(line_number)
-                data['thread'].append(thread)
+                data['address'].append(address)
+                data['source_file'].append(source_file)
+                data['line_number'].append(line_number)
+                data['thread_name'].append(thread_name)
             else:
                 print(f"Ignored line: {line.strip()} - Wrong format")
 
@@ -61,8 +63,8 @@ def update_layout(contents):
 
         # Create subplots with shared x-axis
         graphs_and_tables = []
-        for thread in df['thread'].unique():
-            thread_data = df[df['thread'] == thread]
+        for thread in df['thread_name'].unique():
+            thread_data = df[df['thread_name'] == thread]
 
             # Create a graph for each thread
             fig = make_subplots(rows=1, cols=1)
@@ -72,7 +74,7 @@ def update_layout(contents):
                     y=thread_data['size'].cumsum(),
                     mode='markers+lines',
                     name=thread,
-                    hovertext=f"src:{thread_data['source_file']}<br>line:{thread_data['line']}",  # Include comments as hover text
+                    hovertext=f"src:{thread_data['source_file']}<br>line:{thread_data['line_number']}",  # Include comments as hover text
                     hoverinfo='text'  # Show hover text
                 )
             )
