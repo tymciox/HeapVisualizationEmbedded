@@ -1,6 +1,6 @@
 import dash
 from dash import dcc, html
-import dash_table
+from dash import dash_table
 from dash.dependencies import Input, Output
 import pandas as pd
 import base64
