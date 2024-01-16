@@ -24,4 +24,4 @@ Dash is running on http://127.0.0.1:8050/
  * Debug mode: on
  ```
 5. Open your web browser and go to `http://127.0.0.1:8050/`,
-6. Click the `Select file` button and choose your `.txt` file containing data in the specific format (refer to file `example_data.txt`): 
+6. Click the `Select file` button and choose your `.txt` file containing data in the specific format (refer to file `example_data.txt`)
