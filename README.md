@@ -16,7 +16,7 @@ To utilize HeapVisualizationEmbedded, you need to collect data from your embedde
 1. Run `Windows PowerShell`,
 2. Check your Python `python --version`,
 3. Install necessary libraries `pip install dash pandas`,
-4. Run script `python .\main.py` you should see,
+4. Run script `python .\HeapVisualizationEmbedded.py` you should see,
 ```
 Dash is running on http://127.0.0.1:8050/
 
